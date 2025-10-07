@@ -4,19 +4,27 @@ import React from 'react';
 
 import { EchoProvider } from '@merit-systems/echo-next-sdk/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { WagmiProvider } from 'wagmi';
+import { RainbowKitProvider } from '@rainbow-me/rainbowkit';
+import { wagmiConfig } from '@/lib/wagmi-config';
+import '@rainbow-me/rainbowkit/styles.css';
 
-const appId = process.env.NEXT_PUBLIC_ECHO_APP_ID!;
-
-if (!appId) {
-  throw new Error('NEXT_PUBLIC_ECHO_APP_ID environment variable is required');
-}
-
-const queryClient = new QueryClient();
+const appId = process.env.NEXT_PUBLIC_ECHO_APP_ID;
 
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [queryClient] = React.useState(() => new QueryClient());
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <EchoProvider config={{ appId: appId }}>{children}</EchoProvider>
-    </QueryClientProvider>
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider>
+          {appId ? (
+            <EchoProvider config={{ appId }}>{children}</EchoProvider>
+          ) : (
+            children
+          )}
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   );
 }

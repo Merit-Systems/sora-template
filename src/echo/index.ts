@@ -12,4 +12,6 @@ export const {
   getEchoToken,
 } = Echo({
   appId,
+  baseEchoUrl: 'http://localhost:3000',
+  baseRouterUrl: 'http://localhost:3070',
 });

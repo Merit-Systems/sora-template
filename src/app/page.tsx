@@ -21,8 +21,8 @@
 
 import VideoGenerator from "@/components/video-generator";
 import { isSignedIn } from "@/echo";
-
-import { EchoAccount } from "@/components/echo-account-next";
+import { AuthGuard } from "@/components/auth-guard";
+import { AppHeader } from "@/components/app-header";
 
 /**
  * Main application page
@@ -36,32 +36,11 @@ export default async function Home() {
 
   // Main application interface
   return (
-    <div className="flex flex-col h-screen p-2 sm:p-4 max-w-6xl mx-auto">
-      {/* Header with title and token display */}
-      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full mb-4 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-gray-100 rounded-xl border border-gray-200 shadow-sm gap-3 sm:gap-0">
-        <div className="flex items-center space-x-3">
-          <h1 className="text-2xl sm:text-3xl font-mono bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Sora 2 Explorer
-          </h1>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* Echo token display widget */}
-          {/* {_isSignedIn && <EchoWidget />} */}
-          <EchoAccount />
-        </div>
-      </header>
-
-      {/* Main video generation interface */}
-      <div className="relative">
+    <AuthGuard isEchoSignedIn={_isSignedIn}>
+      <div className="flex flex-col h-screen p-2 sm:p-4 max-w-6xl mx-auto">
+        <AppHeader />
         <VideoGenerator />
-
-        {/* Overlay when not signed in */}
-        {!_isSignedIn && (
-          <div className="absolute inset-0 backdrop-blur-[2px] bg-white/30 flex items-center justify-center rounded-xl border border-gray-300">
-            <EchoAccount />
-          </div>
-        )}
       </div>
-    </div>
+    </AuthGuard>
   );
 }

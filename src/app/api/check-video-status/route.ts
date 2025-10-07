@@ -3,6 +3,8 @@ import { checkGeminiOperationStatus } from '../generate-video/vertex';
 import { checkSoraStatus } from '../generate-video/openai';
 
 export async function POST(request: Request) {
+  const useX402 = request.headers.get('use-x402') === 'true';
+  
   try {
     const body = await request.json();
     const operationData: string | undefined = body?.operationData;
@@ -15,9 +17,9 @@ export async function POST(request: Request) {
       );
     }
     if (model === 'sora-2') {
-      return checkSoraStatus(operationName || operationData!);
+      return checkSoraStatus(operationName || operationData!, useX402, model);
     } else {
-      return checkGeminiOperationStatus(operationName || operationData!);
+      return checkGeminiOperationStatus(operationName || operationData!, useX402);
     }
   } catch (error) {
     console.error('Error checking video status:', error);

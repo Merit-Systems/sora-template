@@ -9,7 +9,8 @@ import type {
 import { videoOperationsStorage } from '@/lib/video-operations';
 import { GenerateVideosOperation } from '@google/genai';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
+import { useWalletClient } from 'wagmi';
 
 interface UseVideoGenerationOptions {
   model: VideoModelOption;
@@ -27,6 +28,7 @@ export function useVideoGeneration({
   onVideoUpdated,
 }: UseVideoGenerationOptions) {
   const queryClient = useQueryClient();
+  const { data: walletClient } = useWalletClient();
 
   const handleSubmit = useCallback(
     async (message: PromptInputMessage) => {
@@ -65,7 +67,9 @@ export function useVideoGeneration({
           generateAudio,
           image: imageDataUrl,
           lastFrame: lastFrameDataUrl,
-        });
+        },
+        walletClient
+      );
 
         if (result.done) {
           handleCompletedOperation(result, videoId, onVideoUpdated);
@@ -96,6 +100,7 @@ export function useVideoGeneration({
       queryClient,
       onVideoAdded,
       onVideoUpdated,
+      walletClient,
     ]
   );
 

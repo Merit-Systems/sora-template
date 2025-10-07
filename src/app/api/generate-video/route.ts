@@ -46,7 +46,7 @@ export async function POST(req: Request) {
         );
       }
 
-      return handleSoraGenerate(soraRequest);
+      return handleSoraGenerate(req.headers, soraRequest);
     } else if (body.model === 'veo-3.0-fast-generate-preview' || body.model === 'veo-3.0-generate-preview') {
       const validation = validateGenerateVideoRequest(body);
       if (!validation.isValid) {

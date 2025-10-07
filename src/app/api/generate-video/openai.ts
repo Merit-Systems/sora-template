@@ -4,9 +4,9 @@
 
 import OpenAI from 'openai';
 import { VideoCreateParams } from 'openai/resources/videos.mjs';
-// import { getEchoToken } from '@/echo';
-// import { ERROR_MESSAGES } from '@/lib/constants';
+import { ERROR_MESSAGES } from '@/lib/constants';
 import { config } from 'dotenv';
+import { getEchoToken } from '@/echo';
 
 config();
 
@@ -92,13 +92,66 @@ export function validateSoraRequest(body: unknown): ValidationResult {
  * Initiates OpenAI Sora video generation and returns operation immediately
  */
 export async function handleSoraGenerate(
+  headers: Headers,
   params: Omit<VideoCreateParams, 'input_reference'> & {
     input_reference?: string; // Base64 encoded image or data URL
   }
 ): Promise<Response> {
+  console.log("using x402", headers.get('use-x402'));
+  let token: string | null = null;
+  try {
+    token = await getEchoToken();
+  } catch (error) {
+    console.log('No Echo token available:', error);
+  }
+
+  if (!token && headers.get('use-x402') !== "true") {
+    return Response.json({ error: ERROR_MESSAGES.AUTH_FAILED }, { status: 500 });
+  }
+
+  console.log("using x402", headers.get('use-x402'));
+
+  console.log("payment header", headers.get('x-payment'));
+
+
+  if (!headers.get('x-payment')) {
+    const fetchHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only forward specific headers we need
+    const paymentHeader = headers.get('x-payment');
+    if (paymentHeader) {
+      fetchHeaders['x-payment'] = paymentHeader;
+    }
+    
+    const response = await fetch('http://localhost:3070/v1/videos', {
+      method: 'POST',
+      headers: fetchHeaders,
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.json();
+      console.log("error", errorBody);
+      
+      return Response.json(errorBody, { 
+        status: response.status
+      });
+    }
+
+    const successBody = await response.json();
+    return Response.json(successBody);
+  }
+    
+
   const openai = new OpenAI(
     {
-      apiKey: process.env.OPENAI_API_KEY,
+      defaultHeaders: {
+        'x-payment': headers.get('x-payment') || '',
+      },
+      baseURL: 'http://localhost:3070',
+      apiKey: "ignore",
     }
   );
 
@@ -124,25 +177,58 @@ export async function handleSoraGenerate(
     createParams.input_reference = file;
   }
 
-  const video = await openai.videos.create(createParams);
-
-  // Return the video generation response
-  return Response.json(video);
+  try {
+    const video = await openai.videos.create(createParams);
+    return Response.json(video);
+  } catch (error) {
+    console.error('Sora video generation error:', error);
+    
+    if (error instanceof OpenAI.APIError) {
+      console.log('API Error details:', {
+        status: error.status,
+        message: error.message,
+        error: error.error,
+        headers: error.headers
+      });
+      
+      // For 402, we need to return the payment request details from the response body
+      // The payment info should be in the original response body, not error.error
+      const responseBody = (error as any).response?.data || error.error || { error: error.message };
+      
+      return Response.json(responseBody, { 
+        status: error.status || 500 
+      });
+    }
+    
+    return Response.json({ error: ERROR_MESSAGES.NO_VIDEO_GENERATED }, { status: 500 });
+  }
 }
 
 /**
  * Checks the status of a Sora video generation by ID
  */
-export async function checkSoraStatus(videoId: string): Promise<Response> {
-//   const apiKey = await getEchoToken();
+export async function checkSoraStatus(videoId: string, useX402: boolean, model?: string): Promise<Response> {
+  let token: string | null = null;
+  
+  if (!useX402) {
+    try {
+      token = await getEchoToken();
+    } catch (error) {
+      console.log('No Echo token available:', error);
+    }
 
-//   if (!apiKey) {
-//     return Response.json({ error: 'API key not configured' }, { status: 500 });
-//   }
+    if (!token) {
+      return Response.json({ error: ERROR_MESSAGES.AUTH_FAILED }, { status: 500 });
+    }
+  }
 
   const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+      apiKey: token || "ignore",
+      defaultHeaders: {
+        'x-payment': "placeholder",
+      },
+      baseURL: 'http://localhost:3070',
+    });
 
   const video = await openai.videos.retrieve(videoId);
 

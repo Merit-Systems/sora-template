@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { config } from 'dotenv';
+import { getEchoToken } from '@/echo';
+import { ERROR_MESSAGES } from '@/lib/constants';
 
 config();
 
@@ -14,8 +16,18 @@ export async function GET(request: Request) {
     );
   }
 
+  // const token = await getEchoToken();
+  // if (!token) {
+  //   return Response.json({ error: ERROR_MESSAGES.AUTH_FAILED }, { status: 500 });
+  // }
+
   const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+    // apiKey: token,
+    apiKey: "ignore",
+    defaultHeaders: {
+      'x-payment': "placeholder",
+    },
+    baseURL: 'http://localhost:3070',
   });
 
   const response = await client.videos.downloadContent(videoId);
