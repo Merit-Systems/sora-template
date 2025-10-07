@@ -1,3 +1,4 @@
+import { isGenerateVideosOperation, isVideo } from './hooks/useVideoOperations';
 import type { VideoOperation } from './types';
 
 const VIDEO_OPERATIONS_KEY = 'video-operations';
@@ -84,8 +85,14 @@ export const videoOperationsStorage = {
     const now = new Date();
     return this.getAll().filter(op => {
       // Not done yet - needs polling
-      
-      if (!op.operation.done) {
+      if (isGenerateVideosOperation(op.operation)) {  
+        if (op.operation.done) {
+          return false;
+        }
+      } else if (isVideo(op.operation)) {
+        if (op.operation.status === "completed") {
+          return false;
+        }
         return true;
       }
 

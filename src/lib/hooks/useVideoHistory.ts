@@ -2,6 +2,7 @@ import type { GeneratedVideo } from '@/lib/types';
 import { videoHistoryStorage } from '@/lib/video-history';
 import { videoOperationsStorage } from '@/lib/video-operations';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isGenerateVideosOperation } from './useVideoOperations';
 
 export function useVideoHistory() {
   const [videoHistory, setVideoHistory] = useState<GeneratedVideo[]>([]);
@@ -31,7 +32,9 @@ export function useVideoHistory() {
     const savedOperations = videoOperationsStorage.getPending();
     if (savedOperations.length === 0) return;
 
-    const historyVideos: GeneratedVideo[] = savedOperations.map(operation => ({
+    const historyVideos: GeneratedVideo[] = savedOperations.map(operation => 
+      
+      isGenerateVideosOperation(operation.operation) ? {
       id: operation.id,
       prompt: operation.prompt,
       model: operation.model,
@@ -41,7 +44,17 @@ export function useVideoHistory() {
       videoUrl: operation.videoUrl,
       error: operation.error,
       operationName: operation.operation.name,
-    }));
+    } : {
+      id: operation.id,
+      prompt: operation.prompt,
+      model: operation.model,
+      durationSeconds: operation.durationSeconds,
+      timestamp: operation.timestamp,
+      isLoading: operation.operation.status === "queued" || operation.operation.status === "in_progress",
+      videoUrl: operation.videoUrl,
+      error: operation.error,
+      operationName: operation.operation.id,
+    });
 
     setVideoHistory(prev => {
       const existingIds = new Set(prev.map(v => v.id));

@@ -1,6 +1,5 @@
 import type { GenerateVideoRequest, VideoModelOption } from '@/lib/types';
 import { GenerateVideosOperation } from '@google/genai';
-import { Video } from 'openai/resources/videos.mjs';
 
 /**
  * Generate a new video using the Echo SDK

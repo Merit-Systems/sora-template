@@ -15,13 +15,13 @@ interface UseVideoOperationsOptions {
 }
 
 // Type guards
-function isGenerateVideosOperation(
+export function isGenerateVideosOperation(
   operation: GenerateVideosOperation | Video
 ): operation is GenerateVideosOperation {
   return 'done' in operation;
 }
 
-function isVideo(
+export function isVideo(
   operation: GenerateVideosOperation | Video
 ): operation is Video {
   return 'id' in operation && 'status' in operation && !('done' in operation);

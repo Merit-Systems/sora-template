@@ -243,7 +243,7 @@ export default function VideoGenerator() {
               </Label>
               <Slider
                 id="duration-slider"
-                value={[allowedDurations.indexOf(durationSeconds as any)]}
+                value={[durationSeconds]}
                 onValueChange={([index]) =>
                   setDurationSeconds(allowedDurations[index] as 4 | 6 | 8 | 12)
                 }

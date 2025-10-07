@@ -7,10 +7,7 @@
  * - Returns video URLs or operation status
  */
 
-import {
-  GenerateVideoRequest,
-  validateGenerateVideoRequest,
-} from './validation';
+import { validateGenerateVideoRequest } from './validation';
 // import { handleGeminiGenerate } from './vertex';
 import { handleSoraGenerate, validateSoraRequest } from './openai';
 import { handleGeminiGenerate } from './vertex';
