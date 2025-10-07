@@ -1,7 +1,5 @@
 import OpenAI from 'openai';
 import { config } from 'dotenv';
-import { getEchoToken } from '@/echo';
-import { ERROR_MESSAGES } from '@/lib/constants';
 
 config();
 

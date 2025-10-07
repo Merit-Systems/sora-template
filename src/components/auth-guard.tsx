@@ -2,7 +2,6 @@
 
 import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
-import { SignInButton } from './signin-button';
 import { WalletConnectButton } from './connect-button';
 
 interface AuthGuardProps {

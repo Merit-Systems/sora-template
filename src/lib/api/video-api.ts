@@ -11,7 +11,7 @@ export async function generateVideo(
   request: GenerateVideoRequest,
   walletClient: WalletClient | undefined
 ): Promise<GenerateVideosOperation> {
-  let headers = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
   if (walletClient) {
       headers['use-x402'] = "true"; 
   }
@@ -51,7 +51,7 @@ export async function checkVideoStatus(
   model: VideoModelOption,
   walletClient: WalletClient | undefined
 ): Promise<GenerateVideosOperation> {
-  let headers = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
   if (walletClient) {
       headers['use-x402'] = "true"; 
   }
@@ -74,7 +74,7 @@ export async function checkSoraStatus(
   model: VideoModelOption,
   walletClient: WalletClient | undefined
 ): Promise<GenerateVideosOperation> {
-  let headers = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', "use-x402": "false", "x-payment": ""};
   if (walletClient) {
       headers['use-x402'] = "true"; 
   }

@@ -9,7 +9,7 @@ import type {
 import { videoOperationsStorage } from '@/lib/video-operations';
 import { GenerateVideosOperation } from '@google/genai';
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useWalletClient } from 'wagmi';
 
 interface UseVideoGenerationOptions {

@@ -193,7 +193,7 @@ export async function handleSoraGenerate(
       
       // For 402, we need to return the payment request details from the response body
       // The payment info should be in the original response body, not error.error
-      const responseBody = (error as any).response?.data || error.error || { error: error.message };
+      const responseBody = (error as { response?: { data: unknown }; error?: unknown; message: string }).response?.data || (error as { error?: unknown }).error || { error: error.message };
       
       return Response.json(responseBody, { 
         status: error.status || 500 
@@ -207,7 +207,7 @@ export async function handleSoraGenerate(
 /**
  * Checks the status of a Sora video generation by ID
  */
-export async function checkSoraStatus(videoId: string, useX402: boolean, model?: string): Promise<Response> {
+export async function checkSoraStatus(videoId: string, useX402: boolean): Promise<Response> {
   let token: string | null = null;
   
   if (!useX402) {

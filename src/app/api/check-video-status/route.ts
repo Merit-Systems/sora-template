@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       );
     }
     if (model === 'sora-2') {
-      return checkSoraStatus(operationName || operationData!, useX402, model);
+      return checkSoraStatus(operationName || operationData!, useX402);
     } else {
       return checkGeminiOperationStatus(operationName || operationData!, useX402);
     }
