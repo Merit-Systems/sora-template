@@ -1,21 +1,22 @@
-import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
-import { generateVideo } from '@/lib/api/video-api';
-import { fileToDataUrl } from '@/lib/image-utils';
+import type { PromptInputMessage } from "@/components/ai-elements/prompt-input";
+import { generateVideo } from "@/lib/api/video-api";
+import { fileToDataUrl } from "@/lib/image-utils";
 import type {
   GeneratedVideo,
   VideoModelOption,
   VideoOperation,
-} from '@/lib/types';
-import { videoOperationsStorage } from '@/lib/video-operations';
-import { GenerateVideosOperation } from '@google/genai';
-import { useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
-import { useWalletClient } from 'wagmi';
+} from "@/lib/types";
+import { videoOperationsStorage } from "@/lib/video-operations";
+import { GenerateVideosOperation } from "@google/genai";
+import { useQueryClient } from "@tanstack/react-query";
+import { useCallback } from "react";
+import { useWalletClient } from "wagmi";
 
 interface UseVideoGenerationOptions {
   model: VideoModelOption;
   durationSeconds: number;
   generateAudio: boolean;
+  size?: string;
   onVideoAdded: (video: GeneratedVideo) => void;
   onVideoUpdated: (id: string, updates: Partial<GeneratedVideo>) => void;
 }
@@ -24,6 +25,7 @@ export function useVideoGeneration({
   model,
   durationSeconds,
   generateAudio,
+  size,
   onVideoAdded,
   onVideoUpdated,
 }: UseVideoGenerationOptions) {
@@ -39,12 +41,12 @@ export function useVideoGeneration({
         return;
       }
 
-      const prompt = message.text?.trim() || '';
+      const prompt = message.text?.trim() || "";
       const videoId = `vid_${Date.now()}`;
 
       // Process image attachments
       const { imageDataUrl, lastFrameDataUrl } = await processImageAttachments(
-        message.files
+        message.files,
       );
 
       // Create placeholder for optimistic UI
@@ -60,16 +62,18 @@ export function useVideoGeneration({
       onVideoAdded(placeholderVideo);
 
       try {
-        const result = await generateVideo({
-          prompt,
-          model,
-          durationSeconds,
-          generateAudio,
-          image: imageDataUrl,
-          lastFrame: lastFrameDataUrl,
-        },
-        walletClient
-      );
+        const result = await generateVideo(
+          {
+            prompt,
+            model,
+            durationSeconds,
+            generateAudio,
+            image: imageDataUrl,
+            lastFrame: lastFrameDataUrl,
+            size,
+          },
+          walletClient,
+        );
 
         if (result.done) {
           handleCompletedOperation(result, videoId, onVideoUpdated);
@@ -81,15 +85,15 @@ export function useVideoGeneration({
             model,
             durationSeconds,
             queryClient,
-            onVideoUpdated
+            onVideoUpdated,
           );
         }
       } catch (error) {
-        console.error('Error generating video:', error);
+        console.error("Error generating video:", error);
         onVideoUpdated(videoId, {
           isLoading: false,
           error:
-            error instanceof Error ? error.message : 'Failed to generate video',
+            error instanceof Error ? error.message : "Failed to generate video",
         });
       }
     },
@@ -97,11 +101,12 @@ export function useVideoGeneration({
       model,
       durationSeconds,
       generateAudio,
+      size,
       queryClient,
       onVideoAdded,
       onVideoUpdated,
       walletClient,
-    ]
+    ],
   );
 
   return { handleSubmit };
@@ -110,13 +115,13 @@ export function useVideoGeneration({
 // ========== Helper Functions ==========
 
 async function processImageAttachments(
-  files?: PromptInputMessage['files']
+  files?: PromptInputMessage["files"],
 ): Promise<{ imageDataUrl?: string; lastFrameDataUrl?: string }> {
   if (!files || files.length === 0) {
     return {};
   }
 
-  const imageFiles = files.filter(f => f.mediaType?.startsWith('image/'));
+  const imageFiles = files.filter((f) => f.mediaType?.startsWith("image/"));
   if (imageFiles.length === 0) {
     return {};
   }
@@ -130,17 +135,17 @@ async function processImageAttachments(
 
     return { imageDataUrl, lastFrameDataUrl };
   } catch (error) {
-    console.error('Failed to process image attachments:', error);
+    console.error("Failed to process image attachments:", error);
     return {};
   }
 }
 
 async function fetchAndConvertImage(
-  attachment: NonNullable<PromptInputMessage['files']>[number]
+  attachment: NonNullable<PromptInputMessage["files"]>[number],
 ): Promise<string> {
   const response = await fetch(attachment.url);
   const blob = await response.blob();
-  const file = new File([blob], attachment.filename || 'image', {
+  const file = new File([blob], attachment.filename || "image", {
     type: attachment.mediaType,
   });
   return fileToDataUrl(file);
@@ -149,14 +154,14 @@ async function fetchAndConvertImage(
 function handleCompletedOperation(
   result: GenerateVideosOperation,
   videoId: string,
-  onVideoUpdated: (id: string, updates: Partial<GeneratedVideo>) => void
+  onVideoUpdated: (id: string, updates: Partial<GeneratedVideo>) => void,
 ) {
   const video = result.response?.generatedVideos?.[0]?.video;
 
   if (video && (video.uri || video.videoBytes)) {
     const videoUrl = video.videoBytes
       ? `data:video/mp4;base64,${video.videoBytes}`
-      : video.uri || '';
+      : video.uri || "";
 
     onVideoUpdated(videoId, {
       videoUrl,
@@ -170,7 +175,7 @@ function handleCompletedOperation(
     if (videoWithExpiry.expiresAt) {
       const operation = videoOperationsStorage
         .getAll()
-        .find(op => op.id === videoId);
+        .find((op) => op.id === videoId);
       if (operation) {
         videoOperationsStorage.update(videoId, {
           signedUrlExpiresAt: videoWithExpiry.expiresAt,
@@ -181,9 +186,9 @@ function handleCompletedOperation(
     onVideoUpdated(videoId, {
       isLoading: false,
       error:
-        typeof result.error === 'string'
+        typeof result.error === "string"
           ? result.error
-          : 'Video generation failed',
+          : "Video generation failed",
     });
   }
 }
@@ -195,7 +200,7 @@ function handlePendingOperation(
   model: VideoModelOption,
   durationSeconds: number,
   queryClient: ReturnType<typeof useQueryClient>,
-  onVideoUpdated: (id: string, updates: Partial<GeneratedVideo>) => void
+  onVideoUpdated: (id: string, updates: Partial<GeneratedVideo>) => void,
 ) {
   const operation: VideoOperation = {
     id: videoId,
@@ -207,6 +212,6 @@ function handlePendingOperation(
   };
 
   videoOperationsStorage.store(operation);
-  queryClient.invalidateQueries({ queryKey: ['video-operations'] });
+  queryClient.invalidateQueries({ queryKey: ["video-operations"] });
   onVideoUpdated(videoId, { operationName: result.name });
 }

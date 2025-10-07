@@ -80,6 +80,7 @@ export default function VideoGenerator() {
     model,
     durationSeconds,
     generateAudio,
+    size: videoSize,
     onVideoAdded: addVideo,
     onVideoUpdated: updateVideo,
   });

@@ -1,6 +1,6 @@
-import { VideoModelOption } from '@/lib/types';
+import { VideoModelOption } from "@/lib/types";
 
-export type { GenerateVideoRequest } from '@/lib/types';
+export type { GenerateVideoRequest } from "@/lib/types";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -8,42 +8,36 @@ export interface ValidationResult {
 }
 
 export function validateGenerateVideoRequest(body: unknown): ValidationResult {
-  if (!body || typeof body !== 'object') {
+  if (!body || typeof body !== "object") {
     return {
       isValid: false,
-      error: { message: 'Invalid request body', status: 400 },
+      error: { message: "Invalid request body", status: 400 },
     };
   }
 
-  const { prompt, model, durationSeconds, generateAudio } = body as Record<
-    string,
-    unknown
-  >;
+  const { prompt, model, durationSeconds, generateAudio, size } =
+    body as Record<string, unknown>;
 
-  if (!prompt || typeof prompt !== 'string') {
+  if (!prompt || typeof prompt !== "string") {
     return {
       isValid: false,
-      error: { message: 'Prompt is required', status: 400 },
+      error: { message: "Prompt is required", status: 400 },
     };
   }
 
   if (prompt.length < 3 || prompt.length > 1000) {
     return {
       isValid: false,
-      error: { message: 'Prompt must be 3-1000 characters', status: 400 },
+      error: { message: "Prompt must be 3-1000 characters", status: 400 },
     };
   }
 
-  const validModels: VideoModelOption[] = [
-    'veo-3.0-fast-generate-preview',
-    'veo-3.0-generate-preview',
-    'sora-2',
-  ];
+  const validModels: VideoModelOption[] = ["sora-2", "sora-2-pro"];
   if (!model || !validModels.includes(model as VideoModelOption)) {
     return {
       isValid: false,
       error: {
-        message: `Model must be: ${validModels.join(', ')}`,
+        message: `Model must be: ${validModels.join(", ")}`,
         status: 400,
       },
     };
@@ -51,28 +45,41 @@ export function validateGenerateVideoRequest(body: unknown): ValidationResult {
 
   if (durationSeconds !== undefined) {
     if (
-      typeof durationSeconds !== 'number' ||
+      typeof durationSeconds !== "number" ||
       durationSeconds < 1 ||
       durationSeconds > 60
     ) {
       return {
         isValid: false,
         error: {
-          message: 'Duration must be 4, 6, 8, or 12 seconds',
+          message: "Duration must be 4, 6, 8, or 12 seconds",
           status: 400,
         },
       };
     }
   }
 
-  if (generateAudio !== undefined && typeof generateAudio !== 'boolean') {
+  if (generateAudio !== undefined && typeof generateAudio !== "boolean") {
     return {
       isValid: false,
       error: {
-        message: 'generateAudio must be a boolean',
+        message: "generateAudio must be a boolean",
         status: 400,
       },
     };
+  }
+
+  if (size !== undefined) {
+    const validSizes = ["720x1280", "1280x720", "1024x1792", "1792x1024"];
+    if (typeof size !== "string" || !validSizes.includes(size)) {
+      return {
+        isValid: false,
+        error: {
+          message: `Size must be one of: ${validSizes.join(", ")}`,
+          status: 400,
+        },
+      };
+    }
   }
 
   return { isValid: true };

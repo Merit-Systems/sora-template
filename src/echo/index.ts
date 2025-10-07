@@ -1,4 +1,4 @@
-import Echo from '@merit-systems/echo-next-sdk';
+import Echo from "@merit-systems/echo-next-sdk";
 
 const appId = process.env.ECHO_APP_ID!;
 
@@ -12,6 +12,4 @@ export const {
   getEchoToken,
 } = Echo({
   appId,
-  baseEchoUrl: 'http://localhost:3000',
-  baseRouterUrl: 'http://localhost:3070',
 });
