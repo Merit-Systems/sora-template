@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useAccount } from 'wagmi';
-import { useEffect, useState } from 'react';
-import { WalletConnectButton } from './connect-button';
+import { useEffect, useState } from "react";
+import { useAccount } from "wagmi";
+import { WalletConnectButton } from "./connect-button";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -32,7 +32,7 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
               Sora-402
             </h2>
             <p className="mt-2 text-gray-600 text-sm dark:text-gray-400">
-              AI-powered video generation, paid by Crypto!
+              Pay with crypto for AI-powered video generation
             </p>
           </div>
 
@@ -67,10 +67,6 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
                 <WalletConnectButton />
               </div>
             )}
-
-            <div className="text-gray-500 text-xs dark:text-gray-400">
-              Secure authentication with built-in AI billing
-            </div>
           </div>
         </div>
       </div>
@@ -79,4 +75,3 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
 
   return <>{children}</>;
 }
-
