@@ -1,24 +1,24 @@
-import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import { Providers } from './providers';
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
 
 const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
 });
 
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: 'Echo Video Gen',
-  description: 'Echo Video Generation Template',
+  title: "Sora 2 Explorer",
+  description: "Sora 2 Explorer",
   icons: {
-    icon: [{ url: '/favicon.ico', sizes: '32x32', type: 'image/x-icon' }],
-    shortcut: '/favicon.ico',
+    icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" }],
+    shortcut: "/favicon.ico",
   },
 };
 

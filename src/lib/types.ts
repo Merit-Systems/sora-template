@@ -3,22 +3,22 @@
  * This file consolidates all type definitions used across the application
  */
 
-import { GenerateVideosOperation } from '@google/genai';
-import { Video } from 'openai/resources/videos.mjs';
+import { GenerateVideosOperation } from "@google/genai";
+import { Video } from "openai/resources/videos.mjs";
 
 /**
  * Available AI models for image generation
  */
-export type ModelOption = 'openai' | 'gemini';
+export type ModelOption = "openai" | "gemini";
 
 /**
  * Available AI models for video generation
  */
 export type VideoModelOption =
-  | 'veo-3.0-fast-generate-preview'
-  | 'veo-3.0-generate-preview'
-  | 'sora-2';
-
+  | "veo-3.0-fast-generate-preview"
+  | "veo-3.0-generate-preview"
+  | "sora-2"
+  | "sora-2-pro";
 
 /**
  * Model configuration with display names
