@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   PromptInput,
@@ -10,42 +10,39 @@ import {
   PromptInputAttachments,
   PromptInputBody,
   type PromptInputMessage,
-  PromptInputModelSelect,
-  PromptInputModelSelectContent,
-  PromptInputModelSelectItem,
-  PromptInputModelSelectTrigger,
-  PromptInputModelSelectValue,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
   PromptInputTools,
-} from '@/components/ai-elements/prompt-input';
-import { Button } from '@/components/ui/button';
+} from "@/components/ai-elements/prompt-input";
+import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
-import { useVideoGeneration } from '@/lib/hooks/useVideoGeneration';
-import { useVideoHistory } from '@/lib/hooks/useVideoHistory';
-import { useVideoOperations } from '@/lib/hooks/useVideoOperations';
-import type { VideoModelConfig, VideoModelOption } from '@/lib/types';
-import { Settings, X } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { FileInputManager } from './FileInputManager';
-import { VideoHistory } from './video-history';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { useVideoGeneration } from "@/lib/hooks/useVideoGeneration";
+import { useVideoHistory } from "@/lib/hooks/useVideoHistory";
+import { useVideoOperations } from "@/lib/hooks/useVideoOperations";
+import type { VideoModelOption } from "@/lib/types";
+import { Settings, X } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { FileInputManager } from "./FileInputManager";
+import { VideoHistory } from "./video-history";
 
-const models: VideoModelConfig[] = [
-  { id: 'sora-2', name: 'Sora 2' },
-  { id: 'veo-3.0-fast-generate-preview', name: 'Veo 3.0 Fast Generate Preview' },
-  { id: 'veo-3.0-generate-preview', name: 'Veo 3.0 Generate Preview' },
-];
+type VideoSize = "720x1280" | "1280x720" | "1024x1792" | "1792x1024";
 
 /**
  * Main VideoGenerator component
@@ -54,36 +51,18 @@ const models: VideoModelConfig[] = [
  * - Uses PromptInput for unified input handling
  * - Supports text-to-video generation with duration control
  * - Maintains history of all generated videos
- * - Provides seamless model switching between available video models
+ * - Configurable model, size, and duration settings via modal
  */
 export default function VideoGenerator() {
-  const [model, setModel] = useState<VideoModelOption>(
-    'sora-2'
-  );
-  const [durationSeconds, setDurationSeconds] = useState<4 | 6 | 8 | 12>(4);
-  const [generateAudio, setGenerateAudio] = useState<boolean>(false);
+  const [model, setModel] = useState<VideoModelOption>("sora-2");
+  const [videoSize, setVideoSize] = useState<VideoSize>("1280x720");
+  const [durationSeconds, setDurationSeconds] = useState<4 | 8 | 12>(4);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const generateAudio = true; // Audio is always enabled
   const [hasContent, setHasContent] = useState(false);
   const promptInputRef = useRef<HTMLFormElement>(null);
 
-  const allowedDurations = model === 'sora-2' 
-    ? ([4, 8, 12] as const)
-    : ([4, 6, 8] as const);
-
-  // Auto-enable audio and adjust duration for sora-2
-  useEffect(() => {
-    if (model === 'sora-2') {
-      setGenerateAudio(true);
-      // If current duration is 6 (not allowed for sora), reset to 4
-      if (durationSeconds === 6) {
-        setDurationSeconds(4);
-      }
-    } else {
-      // If current duration is 12 (not allowed for veo), reset to 8
-      if (durationSeconds === 12) {
-        setDurationSeconds(8);
-      }
-    }
-  }, [model, durationSeconds]);
+  const allowedDurations = [4, 8, 12] as const;
 
   const { videoHistory, isInitialized, addVideo, updateVideo, removeVideo } =
     useVideoHistory();
@@ -106,7 +85,7 @@ export default function VideoGenerator() {
       await generateVideo(message);
       setHasContent(false);
     },
-    [generateVideo]
+    [generateVideo],
   );
 
   const clearForm = useCallback(() => {
@@ -128,14 +107,14 @@ export default function VideoGenerator() {
         <FileInputManager />
         <PromptInputBody>
           <PromptInputAttachments>
-            {attachment => {
+            {(attachment) => {
               setHasContent(true);
               return <PromptInputAttachment data={attachment} />;
             }}
           </PromptInputAttachments>
           <PromptInputTextarea
             placeholder="Describe the video you want to generate, or attach an image..."
-            onChange={e => setHasContent(e.target.value.length > 0 || false)}
+            onChange={(e) => setHasContent(e.target.value.length > 0 || false)}
           />
         </PromptInputBody>
         <PromptInputToolbar>
@@ -146,113 +125,100 @@ export default function VideoGenerator() {
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
             </PromptInputActionMenu>
-            <PromptInputModelSelect
-              onValueChange={value => setModel(value as VideoModelOption)}
-              value={model}
-            >
-              <PromptInputModelSelectTrigger>
-                <PromptInputModelSelectValue />
-              </PromptInputModelSelectTrigger>
-              <PromptInputModelSelectContent>
-                {models.map(m => (
-                  <PromptInputModelSelectItem key={m.id} value={m.id}>
-                    {m.name}
-                  </PromptInputModelSelectItem>
-                ))}
-              </PromptInputModelSelectContent>
-            </PromptInputModelSelect>
 
-            {/* Mobile: Settings Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild className="md:hidden">
+            {/* Settings Modal */}
+            <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+              <DialogTrigger asChild>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-9 px-3"
+                  className="h-9 w-9 p-0"
                 >
                   <Settings size={16} />
                 </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-64">
-                <DropdownMenuLabel>Video Settings</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={e => e.preventDefault()}>
-                  <div className="flex items-center justify-between w-full">
-                    <Label
-                      htmlFor="audio-toggle-mobile"
-                      className="text-sm font-medium cursor-pointer"
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[400px]">
+                <DialogHeader>
+                  <DialogTitle>Video Settings</DialogTitle>
+                  <DialogDescription>
+                    Configure your video generation settings
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  {/* Model Selection */}
+                  <div className="space-y-2">
+                    <Label htmlFor="model">Model</Label>
+                    <Select
+                      value={model}
+                      onValueChange={(value: VideoModelOption) =>
+                        setModel(value)
+                      }
                     >
-                      Audio
-                    </Label>
-                    <Switch
-                      id="audio-toggle-mobile"
-                      checked={generateAudio}
-                      onCheckedChange={setGenerateAudio}
-                      disabled={model === 'sora-2'}
-                    />
+                      <SelectTrigger id="model">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="sora-2">Sora 2</SelectItem>
+                        <SelectItem value="sora-2-pro">Sora 2 Pro</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={e => e.preventDefault()}>
-                  <div className="w-full space-y-2">
-                    <Label
-                      htmlFor="duration-slider-mobile"
-                      className="text-sm font-medium pb-2"
+
+                  {/* Video Size Selection */}
+                  <div className="space-y-2">
+                    <Label htmlFor="videoSize">Video Size</Label>
+                    <Select
+                      value={videoSize}
+                      onValueChange={(value: VideoSize) => setVideoSize(value)}
                     >
+                      <SelectTrigger id="videoSize">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1280x720">
+                          1280x720 (Landscape)
+                        </SelectItem>
+                        <SelectItem value="720x1280">
+                          720x1280 (Portrait)
+                        </SelectItem>
+                        <SelectItem value="1792x1024">
+                          1792x1024 (Wide Landscape)
+                        </SelectItem>
+                        <SelectItem value="1024x1792">
+                          1024x1792 (Tall Portrait)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Duration Slider */}
+                  <div className="space-y-2">
+                    <Label htmlFor="duration-slider">
                       Duration: {durationSeconds}s
                     </Label>
                     <Slider
-                      id="duration-slider-mobile"
-                      value={[durationSeconds]}
+                      id="duration-slider"
+                      value={[allowedDurations.indexOf(durationSeconds)]}
                       onValueChange={([index]) =>
-                        setDurationSeconds(allowedDurations[index] as 4 | 6 | 8 | 12)
+                        setDurationSeconds(
+                          allowedDurations[index] as 4 | 8 | 12,
+                        )
                       }
                       min={0}
                       max={allowedDurations.length - 1}
                       step={1}
                       className="w-full py-2"
                     />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>4s</span>
+                      <span>8s</span>
+                      <span>12s</span>
+                    </div>
                   </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {/* Desktop: Inline Settings */}
-            <div className="hidden md:flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-white">
-              <Label
-                htmlFor="audio-toggle"
-                className="text-sm font-medium whitespace-nowrap cursor-pointer"
-              >
-                Audio
-              </Label>
-              <Switch
-                id="audio-toggle"
-                checked={generateAudio}
-                onCheckedChange={setGenerateAudio}
-                disabled={model === 'sora-2'}
-              />
-            </div>
-
-            <div className="hidden md:flex items-center gap-3 px-3 py-2 border border-gray-200 rounded-lg bg-white">
-              <Label
-                htmlFor="duration-slider"
-                className="text-sm font-medium whitespace-nowrap"
-              >
-                Duration: {durationSeconds}s
-              </Label>
-              <Slider
-                id="duration-slider"
-                value={[durationSeconds]}
-                onValueChange={([index]) =>
-                  setDurationSeconds(allowedDurations[index] as 4 | 6 | 8 | 12)
-                }
-                min={0}
-                max={allowedDurations.length - 1}
-                step={1}
-                className="w-20"
-              />
-            </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </PromptInputTools>
           <div className="flex items-center gap-2">
             {hasContent && (
