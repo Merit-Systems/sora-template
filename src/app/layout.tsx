@@ -15,10 +15,32 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Sora 2 Explorer",
-  description: "Sora 2 Explorer",
+  description:
+    "Generate stunning videos with AI using Sora 2 and Sora 2 Pro. Pay with crypto or Echo credits.",
   icons: {
     icon: [{ url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" }],
     shortcut: "/favicon.ico",
+  },
+  openGraph: {
+    title: "Sora 2 Explorer",
+    description:
+      "Generate stunning videos with AI using Sora 2 and Sora 2 Pro. Pay with crypto or Echo credits.",
+    images: [
+      {
+        url: "/logo/sora.png",
+        width: 1200,
+        height: 630,
+        alt: "Sora 2 Explorer",
+      },
+    ],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sora 2 Explorer",
+    description:
+      "Generate stunning videos with AI using Sora 2 and Sora 2 Pro. Pay with crypto or Echo credits.",
+    images: ["/logo/sora.png"],
   },
 };
 
