@@ -15,7 +15,6 @@ import { handleSoraGenerate } from "./openai";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("Generate video request body:", body);
 
     const validation = validateGenerateVideoRequest(body);
     if (!validation.isValid) {

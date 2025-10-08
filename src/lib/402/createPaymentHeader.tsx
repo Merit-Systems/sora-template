@@ -6,7 +6,6 @@ export async function createPaymentHeader(
   responseBody: string,
 ): Promise<string> {
   const paymentDetails = JSON.parse(responseBody);
-  console.log("Payment details:", paymentDetails);
 
   const acceptSpec = paymentDetails.accepts?.[0];
   if (!acceptSpec) {

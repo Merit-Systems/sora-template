@@ -90,6 +90,61 @@ export function validateSoraRequest(body: unknown): ValidationResult {
   return { isValid: true };
 }
 
+// Helper functions for cleaner code
+async function validateAuthentication(
+  useX402: boolean,
+  paymentHeader: string | null,
+): Promise<{ token?: string | null; error?: Response }> {
+  if (useX402) {
+    // In x402 mode, we don't validate payment header here
+    // Let the OpenAI API return 402 if payment is needed
+    return {};
+  }
+
+  // Echo mode - need token
+  try {
+    const token = await getEchoToken();
+    if (!token) {
+      return {
+        error: Response.json(
+          { error: ERROR_MESSAGES.AUTH_FAILED },
+          { status: 500 },
+        ),
+      };
+    }
+    return { token };
+  } catch (error) {
+    console.log("No Echo token available:", error);
+    return {
+      error: Response.json(
+        { error: ERROR_MESSAGES.AUTH_FAILED },
+        { status: 500 },
+      ),
+    };
+  }
+}
+
+function createOpenAIClient(
+  useX402: boolean,
+  paymentHeader: string | null,
+  token?: string | null,
+): OpenAI {
+  const openaiHeaders: Record<string, string> = {};
+  let apiKey = "ignore";
+
+  if (useX402) {
+    openaiHeaders["x-payment"] = paymentHeader || "";
+  } else {
+    apiKey = token || "ignore";
+  }
+
+  return new OpenAI({
+    defaultHeaders: openaiHeaders,
+    baseURL: BASE_URL,
+    apiKey,
+  });
+}
+
 /**
  * Initiates OpenAI Sora video generation and returns operation immediately
  */
@@ -99,37 +154,28 @@ export async function handleSoraGenerate(
     input_reference?: string; // Base64 encoded image or data URL
   },
 ): Promise<Response> {
-  console.log("using x402", headers.get("use-x402"));
-  let token: string | null = null;
-  try {
-    token = await getEchoToken();
-  } catch (error) {
-    console.log("No Echo token available:", error);
+  const useX402 = headers.get("use-x402") === "true";
+  const paymentHeader = headers.get("x-payment");
+
+  // Validate authentication
+  const authResult = await validateAuthentication(useX402, paymentHeader);
+  if (authResult.error) {
+    return authResult.error;
   }
 
-  if (!token && headers.get("use-x402") !== "true") {
-    return Response.json(
-      { error: ERROR_MESSAGES.AUTH_FAILED },
-      { status: 500 },
-    );
-  }
-
-  console.log("using x402", headers.get("use-x402"));
-
-  console.log("payment header", headers.get("x-payment"));
-
-  if (!headers.get("x-payment")) {
+  // For x402 mode, use direct fetch to properly handle 402 responses
+  if (useX402) {
     const fetchHeaders: Record<string, string> = {
       "Content-Type": "application/json",
     };
 
-    // Only forward specific headers we need
-    const paymentHeader = headers.get("x-payment");
     if (paymentHeader) {
       fetchHeaders["x-payment"] = paymentHeader;
     }
 
-    const response = await fetch(`${BASE_URL}/v1/videos`, {
+    const fullUrl = `${BASE_URL}/videos`;
+
+    const response = await fetch(fullUrl, {
       method: "POST",
       headers: fetchHeaders,
       body: JSON.stringify(params),
@@ -137,8 +183,6 @@ export async function handleSoraGenerate(
 
     if (!response.ok) {
       const errorBody = await response.json();
-      console.log("error", errorBody);
-
       return Response.json(errorBody, {
         status: response.status,
       });
@@ -148,13 +192,8 @@ export async function handleSoraGenerate(
     return Response.json(successBody);
   }
 
-  const openai = new OpenAI({
-    defaultHeaders: {
-      "x-payment": headers.get("x-payment") || "",
-    },
-    baseURL: BASE_URL,
-    apiKey: "ignore",
-  });
+  // For Echo mode, use OpenAI client
+  const openai = createOpenAIClient(useX402, paymentHeader, authResult.token);
 
   const createParams: VideoCreateParams = {
     prompt: params.prompt,
@@ -192,8 +231,6 @@ export async function handleSoraGenerate(
         headers: error.headers,
       });
 
-      // For 402, we need to return the payment request details from the response body
-      // The payment info should be in the original response body, not error.error
       const responseBody = (
         error as {
           response?: { data: unknown };
@@ -221,33 +258,32 @@ export async function handleSoraGenerate(
 export async function checkSoraStatus(
   videoId: string,
   useX402: boolean,
+  paymentHeader?: string,
 ): Promise<Response> {
-  let token: string | null = null;
-
-  if (!useX402) {
-    try {
-      token = await getEchoToken();
-    } catch (error) {
-      console.log("No Echo token available:", error);
-    }
-
-    if (!token) {
-      return Response.json(
-        { error: ERROR_MESSAGES.AUTH_FAILED },
-        { status: 500 },
-      );
-    }
+  // Validate authentication
+  const authResult = await validateAuthentication(
+    useX402,
+    paymentHeader || null,
+  );
+  if (authResult.error) {
+    return authResult.error;
   }
 
-  const openai = new OpenAI({
-    apiKey: token || "ignore",
-    defaultHeaders: {
-      "x-payment": "placeholder",
-    },
-    baseURL: BASE_URL,
-  });
+  // Create OpenAI client
+  const openai = createOpenAIClient(
+    useX402,
+    paymentHeader || null,
+    authResult.token,
+  );
 
-  const video = await openai.videos.retrieve(videoId);
-
-  return Response.json(video);
+  try {
+    const video = await openai.videos.retrieve(videoId);
+    return Response.json(video);
+  } catch (error) {
+    console.error("Error retrieving video status:", error);
+    return Response.json(
+      { error: "Failed to retrieve video status" },
+      { status: 500 },
+    );
+  }
 }
