@@ -19,28 +19,20 @@
  * - Model Selection: Currently supports Veo 3 Fast
  */
 
-import VideoGenerator from "@/components/video-generator";
-import { isSignedIn } from "@/echo";
-import { AuthGuard } from "@/components/auth-guard";
 import { AppHeader } from "@/components/app-header";
+import VideoGenerator from "@/components/video-generator";
 
 /**
  * Main application page
  *
- * Server component that checks authentication status and renders
- * either the sign-in page or the main video generation interface
+ * Renders the main video generation interface
+ * Authentication is handled when users try to generate videos
  */
 export default async function Home() {
-  // Check authentication status using Echo SDK
-  const _isSignedIn = await isSignedIn();
-
-  // Main application interface
   return (
-    <AuthGuard isEchoSignedIn={_isSignedIn}>
-      <div className="flex flex-col h-screen p-2 sm:p-4 max-w-6xl mx-auto">
-        <AppHeader />
-        <VideoGenerator />
-      </div>
-    </AuthGuard>
+    <div className="flex flex-col h-screen p-2 sm:p-4 max-w-6xl mx-auto">
+      <AppHeader />
+      <VideoGenerator />
+    </div>
   );
 }

@@ -1,41 +1,53 @@
-import OpenAI from 'openai';
-import { config } from 'dotenv';
+import { getEchoToken } from "@/echo";
+import OpenAI from "openai";
 
-config();
+const BASE_URL = process.env.BASE_URL;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const videoId = searchParams.get('videoId');
+  const videoId = searchParams.get("videoId");
 
-  if (!videoId || typeof videoId !== 'string') {
-    return Response.json(
-      { error: 'videoId is required' },
-      { status: 400 }
-    );
+  if (!videoId || typeof videoId !== "string") {
+    return Response.json({ error: "videoId is required" }, { status: 400 });
   }
 
-  // const token = await getEchoToken();
-  // if (!token) {
-  //   return Response.json({ error: ERROR_MESSAGES.AUTH_FAILED }, { status: 500 });
-  // }
+  // Try to get Echo token, but use x402 dummy payment if unavailable
+  let token: string | null = null;
+  let apiKey = "ignore";
+  const openaiHeaders: Record<string, string> = {};
+
+  try {
+    token = await getEchoToken();
+    if (token) {
+      apiKey = token;
+    } else {
+      openaiHeaders["x-payment"] = "dummy";
+    }
+  } catch {
+    openaiHeaders["x-payment"] = "dummy";
+  }
 
   const client = new OpenAI({
-    // apiKey: token,
-    apiKey: "ignore",
-    defaultHeaders: {
-      'x-payment': "placeholder",
-    },
-    baseURL: 'http://localhost:3070',
+    apiKey,
+    defaultHeaders: openaiHeaders,
+    baseURL: BASE_URL,
   });
 
-  const response = await client.videos.downloadContent(videoId);
-  const content = await response.blob();
+  try {
+    const response = await client.videos.downloadContent(videoId);
+    const content = await response.blob();
 
-  return new Response(content, {
-    headers: {
-      'Content-Type': 'video/mp4',
-      'Content-Disposition': `attachment; filename="video-${videoId}.mp4"`,
-    },
-  });
+    return new Response(content, {
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="video-${videoId}.mp4"`,
+      },
+    });
+  } catch (error) {
+    console.error("Error downloading video:", error);
+    return Response.json(
+      { error: "Failed to download video" },
+      { status: 500 },
+    );
+  }
 }
-

@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { GeneratedVideo } from '@/lib/types';
-import { Copy, Download, Play, X } from 'lucide-react';
-import React, { useCallback, useEffect, useState } from 'react';
-import { VideoDetailsDialog } from './video-details-dialog';
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { GeneratedVideo } from "@/lib/types";
+import { Copy, Download, Play, X } from "lucide-react";
+import React, { useCallback, useEffect, useState } from "react";
+import { VideoDetailsDialog } from "./video-details-dialog";
 
 /**
  * Self-contained loading timer component
@@ -20,7 +20,7 @@ const LoadingTimer = React.memo(function LoadingTimer({
 
   useEffect(() => {
     const timer = setInterval(() => {
-      forceUpdate(n => n + 1);
+      forceUpdate((n) => n + 1);
     }, 100); // Update every 100ms for smooth animation
 
     return () => clearInterval(timer);
@@ -52,19 +52,14 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
       e.stopPropagation(); // Prevent triggering video click
       onRemove(video.id);
     },
-    [video.id, onRemove]
+    [video.id, onRemove],
   );
 
   const handleDownload = useCallback(() => {
     if (!video.videoUrl) return;
 
-    // Always proxy through server to add auth and rewrite host
-    const proxied = `/api/proxy-video?uri=${encodeURIComponent(
-      video.videoUrl
-    )}&download=1`;
-
-    const link = document.createElement('a');
-    link.href = proxied;
+    const link = document.createElement("a");
+    link.href = video.videoUrl;
     link.download = `video_${video.id}.mp4`;
     document.body.appendChild(link);
     link.click();
@@ -77,26 +72,28 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
     try {
       await navigator.clipboard.writeText(video.videoUrl);
     } catch (error) {
-      console.error('Failed to copy video URL:', error);
+      console.error("Failed to copy video URL:", error);
     }
   }, [video]);
 
   const isActionable = Boolean(
-    video.videoUrl && !video.isLoading && !video.error
+    video.videoUrl && !video.isLoading && !video.error,
   );
 
   return (
     <div
       onClick={handleVideoClick}
-      onKeyDown={e => {
-        if (e.key === 'Enter' || e.key === ' ') {
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           handleVideoClick();
         }
       }}
       role="button"
       tabIndex={0}
-      aria-label={`Open details for video: ${video.prompt.slice(0, 50)}${video.prompt.length > 50 ? '...' : ''}`}
+      aria-label={`Open details for video: ${video.prompt.slice(0, 50)}${
+        video.prompt.length > 50 ? "..." : ""
+      }`}
       className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 group cursor-pointer hover:shadow-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all animate-in fade-in slide-in-from-left-4 duration-500"
     >
       {/* Remove button */}
@@ -137,7 +134,7 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
           <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200">
             <Button
               size="sm"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleCopy();
               }}
@@ -150,7 +147,7 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
             </Button>
             <Button
               size="sm"
-              onClick={e => {
+              onClick={(e) => {
                 e.stopPropagation();
                 handleDownload();
               }}
@@ -185,7 +182,7 @@ export const VideoHistory = React.memo(function VideoHistory({
   onRemoveVideo,
 }: VideoHistoryProps) {
   const [selectedVideo, setSelectedVideo] = useState<GeneratedVideo | null>(
-    null
+    null,
   );
   // Memoize callbacks to prevent unnecessary re-renders
   const handleVideoClick = useCallback((video: GeneratedVideo) => {
@@ -204,7 +201,7 @@ export const VideoHistory = React.memo(function VideoHistory({
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">Generated Videos</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 transition-all duration-300 ease-out">
-        {videoHistory.map(video => (
+        {videoHistory.map((video) => (
           <VideoHistoryItem
             key={video.id}
             video={video}

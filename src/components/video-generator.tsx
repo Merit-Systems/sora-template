@@ -37,9 +37,11 @@ import { useVideoGeneration } from "@/lib/hooks/useVideoGeneration";
 import { useVideoHistory } from "@/lib/hooks/useVideoHistory";
 import { useVideoOperations } from "@/lib/hooks/useVideoOperations";
 import type { VideoModelOption } from "@/lib/types";
+import { useEcho } from "@merit-systems/echo-next-sdk/client";
 import { Settings, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
-import { useWalletClient } from "wagmi";
+import { useAccount, useWalletClient } from "wagmi";
+import { AuthModal } from "./auth-modal";
 import { FileInputManager } from "./FileInputManager";
 import { VideoHistory } from "./video-history";
 
@@ -59,6 +61,7 @@ export default function VideoGenerator() {
   const [videoSize, setVideoSize] = useState<VideoSize>("1280x720");
   const [durationSeconds, setDurationSeconds] = useState<4 | 8 | 12>(4);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const generateAudio = true; // Audio is always enabled
   const [hasContent, setHasContent] = useState(false);
   const promptInputRef = useRef<HTMLFormElement>(null);
@@ -69,6 +72,8 @@ export default function VideoGenerator() {
     useVideoHistory();
 
   const { data: walletClient } = useWalletClient();
+  const { isConnected } = useAccount();
+  const { user } = useEcho();
 
   useVideoOperations({
     isInitialized,
@@ -87,10 +92,18 @@ export default function VideoGenerator() {
 
   const handleSubmit = useCallback(
     async (message: PromptInputMessage) => {
+      // Check if user is authenticated
+      const isAuthenticated = !!user || isConnected;
+
+      if (!isAuthenticated) {
+        setAuthModalOpen(true);
+        return;
+      }
+
       await generateVideo(message);
       setHasContent(false);
     },
-    [generateVideo],
+    [generateVideo, user, isConnected],
   );
 
   const clearForm = useCallback(() => {
@@ -244,6 +257,8 @@ export default function VideoGenerator() {
       </PromptInput>
 
       <VideoHistory videoHistory={videoHistory} onRemoveVideo={removeVideo} />
+
+      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>
   );
 }
