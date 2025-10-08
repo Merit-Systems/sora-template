@@ -6,7 +6,14 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 export function WalletConnectButton() {
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        mounted,
+      }) => {
         const ready = mounted;
         const connected = ready && account && chain;
 

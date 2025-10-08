@@ -19,8 +19,8 @@
  * - Model Selection: Currently supports Veo 3 Fast
  */
 
-import VideoGenerator from "@/components/video-generator";
 import { AppHeader } from "@/components/app-header";
+import VideoGenerator from "@/components/video-generator";
 
 /**
  * Main application page

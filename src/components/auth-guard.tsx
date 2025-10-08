@@ -1,8 +1,8 @@
 "use client";
 
+import { useEcho } from "@merit-systems/echo-next-sdk/client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { useEcho } from "@merit-systems/echo-next-sdk/client";
 import { ConnectionSelector } from "./connection-selector";
 
 interface AuthGuardProps {
