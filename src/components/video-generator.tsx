@@ -39,6 +39,7 @@ import { useVideoOperations } from "@/lib/hooks/useVideoOperations";
 import type { VideoModelOption } from "@/lib/types";
 import { Settings, X } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
+import { useWalletClient } from "wagmi";
 import { FileInputManager } from "./FileInputManager";
 import { VideoHistory } from "./video-history";
 
@@ -67,8 +68,11 @@ export default function VideoGenerator() {
   const { videoHistory, isInitialized, addVideo, updateVideo, removeVideo } =
     useVideoHistory();
 
+  const { data: walletClient } = useWalletClient();
+
   useVideoOperations({
     isInitialized,
+    walletClient,
     onOperationComplete: updateVideo,
   });
 
@@ -76,6 +80,7 @@ export default function VideoGenerator() {
     model,
     durationSeconds,
     generateAudio,
+    size: videoSize,
     onVideoAdded: addVideo,
     onVideoUpdated: updateVideo,
   });

@@ -1,4 +1,4 @@
-import Echo from '@merit-systems/echo-next-sdk';
+import Echo from "@merit-systems/echo-next-sdk";
 
 const appId = process.env.ECHO_APP_ID!;
 

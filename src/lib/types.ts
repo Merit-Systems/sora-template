@@ -125,6 +125,7 @@ export interface GenerateVideoRequest {
   generateAudio?: boolean;
   image?: string; // Base64 encoded image or data URL (first frame)
   lastFrame?: string; // Base64 encoded image or data URL (last frame)
+  size?: string; // Video size (e.g., "1280x720", "720x1280")
 }
 
 /**

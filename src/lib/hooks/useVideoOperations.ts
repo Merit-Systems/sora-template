@@ -5,9 +5,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { Video } from 'openai/resources/videos.mjs';
 import { GenerateVideosOperation } from '@google/genai';
+import { WalletClient } from 'viem';
 
 interface UseVideoOperationsOptions {
   isInitialized: boolean;
+  walletClient: WalletClient | undefined;
   onOperationComplete: (
     operationId: string,
     updates: Partial<GeneratedVideo>
@@ -37,6 +39,7 @@ export function isVideo(
  */
 export function useVideoOperations({
   isInitialized,
+  walletClient,
   onOperationComplete,
 }: UseVideoOperationsOptions) {
   const queryClient = useQueryClient();
@@ -45,7 +48,7 @@ export function useVideoOperations({
     : [];
 
   const { data: operationStatuses } = useQuery({
-    queryKey: ['video-operations', pendingOperations.map(op => op.id)],
+    queryKey: ['video-operations', pendingOperations.map(op => op.id), walletClient?.account?.address],
     queryFn: async () => {
       if (pendingOperations.length === 0) {
         return [];
@@ -55,11 +58,11 @@ export function useVideoOperations({
         pendingOperations.map(async op => {
           if (op.model === 'sora-2') {
             const operation = op.operation as Video;
-            const result = await checkSoraStatus(operation.id, op.model);
+            const result = await checkSoraStatus(operation.id, op.model, walletClient);
             return { operationId: op.id, result };
           } else {
             const operation = op.operation as GenerateVideosOperation;
-            const result = await checkVideoStatus(operation, op.model);
+            const result = await checkVideoStatus(operation, op.model, walletClient);
             return { operationId: op.id, result };
           }
         })
@@ -124,7 +127,6 @@ export function useVideoOperations({
 
         // Handle Video (Sora)
         if (isVideo(operation)) {
-          console.log('operation', operation);
           videoOperationsStorage.update(operationId, { operation });
 
           if (operation.status === 'completed') {

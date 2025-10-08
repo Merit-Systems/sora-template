@@ -105,12 +105,13 @@ export async function handleGeminiGenerate(
  * Can accept either a full operation object or just the operation name
  */
 export async function checkGeminiOperationStatus(
-  operationOrName: GenerateVideosOperation | string
-): Promise<Response> {
+  operationOrName: GenerateVideosOperation | string,
+  useX402: boolean
+): Promise<Response> {  
   try {
     const apiKey = await getEchoToken();
 
-    if (!apiKey) {
+    if (!apiKey && !useX402) {
       return Response.json(
         { error: 'API key not configured' },
         { status: 500 }
@@ -118,7 +119,7 @@ export async function checkGeminiOperationStatus(
     }
 
     const ai = new GoogleGenAI({
-      apiKey,
+      apiKey: apiKey || "ignore",
       vertexai: true,
       httpOptions: {
         baseUrl: 'https://echo.router.merit.systems',
