@@ -7,7 +7,7 @@ import { ERROR_MESSAGES } from "@/lib/constants";
 import { padImageForVideo } from "@/lib/image-padding";
 import { config } from "dotenv";
 import OpenAI from "openai";
-import { VideoCreateParams } from "openai/resources/videos.mjs";
+import type { VideoCreateParams } from "openai/resources/videos";
 
 config();
 
@@ -124,11 +124,9 @@ async function validateAuthentication(
   }
 }
 
-function echoFetch(fetch: any, paymentAuthHeader: string | null | undefined) {
-
+function echoFetch(fetch: typeof globalThis.fetch, paymentAuthHeader: string | null | undefined) {
   return async (input: RequestInfo | URL, init?: RequestInit) => {
-    const headers: Record<string, any> = { ...init?.headers };
-    // Handle 402 payment
+    const headers: Record<string, string> = { ...init?.headers } as Record<string, string>;
     if (paymentAuthHeader) {
       headers['x-payment'] = paymentAuthHeader;
     }
