@@ -9,7 +9,7 @@
 
 import { validateGenerateVideoRequest } from "./validation";
 // import { handleGeminiGenerate } from './vertex';
-import { VideoCreateParams, VideoSeconds } from "openai/resources/videos.mjs";
+import type { VideoCreateParams, VideoSeconds } from "openai/resources/videos";
 import { handleSoraGenerate } from "./openai";
 
 export async function POST(req: Request) {

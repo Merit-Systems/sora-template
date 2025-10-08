@@ -7,7 +7,7 @@ import { ERROR_MESSAGES } from "@/lib/constants";
 import { padImageForVideo } from "@/lib/image-padding";
 import { config } from "dotenv";
 import OpenAI from "openai";
-import { VideoCreateParams } from "openai/resources/videos.mjs";
+import type { VideoCreateParams } from "openai/resources/videos";
 
 config();
 
@@ -124,6 +124,21 @@ async function validateAuthentication(
   }
 }
 
+function echoFetch(fetch: typeof globalThis.fetch, paymentAuthHeader: string | null | undefined) {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const headers: Record<string, string> = { ...init?.headers } as Record<string, string>;
+    if (paymentAuthHeader) {
+      headers['x-payment'] = paymentAuthHeader;
+    }
+
+    delete headers['Authorization'];
+    return fetch(input, {
+      ...init,
+      headers,
+    });
+  }
+}
+
 function createOpenAIClient(
   useX402: boolean,
   paymentHeader: string | null,
@@ -134,15 +149,20 @@ function createOpenAIClient(
 
   if (useX402) {
     openaiHeaders["x-payment"] = paymentHeader || "";
+    return new OpenAI({
+      defaultHeaders: openaiHeaders,
+      baseURL: BASE_URL,
+      apiKey: token || "ignore",
+      fetch: echoFetch(fetch, paymentHeader),
+    });
   } else {
     apiKey = token || "ignore";
+    return new OpenAI({
+      defaultHeaders: openaiHeaders,
+      baseURL: BASE_URL,
+      apiKey,
+    });
   }
-
-  return new OpenAI({
-    defaultHeaders: openaiHeaders,
-    baseURL: BASE_URL,
-    apiKey,
-  });
 }
 
 /**
@@ -298,6 +318,43 @@ export async function checkSoraStatus(
     console.error("Error retrieving video status:", error);
     return Response.json(
       { error: "Failed to retrieve video status" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function downloadContent(
+  videoId: string,
+  useX402: boolean,
+  paymentHeader?: string,
+): Promise<Response> {
+  // Validate authentication
+  const authResult = await validateAuthentication(useX402);
+  if (authResult.error) {
+    return authResult.error;
+  }
+
+  // Create OpenAI client
+  const openai = createOpenAIClient(
+    useX402,
+    paymentHeader || null,
+    authResult.token,
+  );
+
+  try {
+    const response = await openai.videos.downloadContent(videoId);
+    const content = await response.blob();
+
+    return new Response(content, {
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="video-${videoId}.mp4"`,
+      },
+    });
+  } catch (error) {
+    console.error("Error downloading video content:", error);
+    return Response.json(
+      { error: "Failed to download video content" },
       { status: 500 },
     );
   }
