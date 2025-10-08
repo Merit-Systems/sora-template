@@ -38,10 +38,10 @@ export function validateSoraRequest(body: unknown): ValidationResult {
     };
   }
 
-  if (prompt.length < 3 || prompt.length > 1000) {
+  if (prompt.length < 3) {
     return {
       isValid: false,
-      error: { message: "Prompt must be 3-1000 characters", status: 400 },
+      error: { message: "Prompt must be 3 characters or more", status: 400 },
     };
   }
 
