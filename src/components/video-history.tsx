@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { GeneratedVideo } from "@/lib/types";
 import { Copy, Download, Play, X } from "lucide-react";
@@ -117,12 +118,7 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
                   {video.progress < 100 ? "Generating..." : "Finalizing..."}
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${video.progress}%` }}
-                />
-              </div>
+              <Progress value={video.progress} />
             </div>
           ) : (
             <Skeleton className="h-16 w-16 rounded-lg" />
