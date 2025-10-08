@@ -2,15 +2,16 @@
 
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
-import { WalletConnectButton } from "./connect-button";
+import { useEcho } from "@merit-systems/echo-next-sdk/client";
+import { ConnectionSelector } from "./connection-selector";
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  isEchoSignedIn: boolean;
 }
 
-export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
+export function AuthGuard({ children }: AuthGuardProps) {
   const { isConnected } = useAccount();
+  const { user } = useEcho();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
     return null;
   }
 
+  const isEchoSignedIn = !!user;
   const isAuthenticated = isEchoSignedIn || isConnected;
 
   if (!isAuthenticated) {
@@ -29,7 +31,7 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
         <div className="w-full max-w-md space-y-8 text-center">
           <div>
             <h2 className="mt-6 font-bold text-3xl text-gray-900 tracking-tight dark:text-white">
-              Sora-402
+              Sora 2 Explorer
             </h2>
             <p className="mt-2 text-gray-600 text-sm dark:text-gray-400">
               Pay with crypto for AI-powered video generation
@@ -37,36 +39,9 @@ export function AuthGuard({ children, isEchoSignedIn }: AuthGuardProps) {
           </div>
 
           <div className="space-y-4">
-            {!isConnected && !isEchoSignedIn && (
-              <>
-                {/* <SignInButton />
-
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-gray-300 border-t dark:border-gray-600" />
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="bg-white px-2 text-gray-500 dark:bg-gray-900 dark:text-gray-400">
-                      Or connect with
-                    </span>
-                  </div>
-                </div> */}
-
-                <div className="flex justify-center">
-                  <WalletConnectButton />
-                </div>
-              </>
-            )}
-
-            {/* {isConnected && !isEchoSignedIn && (
-              <SignInButton />
-            )} */}
-
-            {!isConnected && isEchoSignedIn && (
-              <div className="flex justify-center">
-                <WalletConnectButton />
-              </div>
-            )}
+            <div className="flex justify-center">
+              <ConnectionSelector />
+            </div>
           </div>
         </div>
       </div>

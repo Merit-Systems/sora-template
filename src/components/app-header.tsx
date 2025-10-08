@@ -1,13 +1,8 @@
 "use client";
 
-import { useAccount } from "wagmi";
-import { useEcho } from "@merit-systems/echo-next-sdk/client";
-import { WalletConnectButton } from "./connect-button";
-import { EchoAccount } from "./echo-account-next";
+import { ConnectionSelector } from "./connection-selector";
 
 export function AppHeader() {
-  const { isConnected } = useAccount();
-
   return (
     <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full mb-4 sm:mb-8 p-4 sm:p-6 bg-gradient-to-r from-slate-50 to-gray-100 rounded-xl border border-gray-200 shadow-sm gap-3 sm:gap-0">
       <div className="flex items-center space-x-3">
@@ -16,10 +11,7 @@ export function AppHeader() {
         </h1>
       </div>
       <div className="flex items-center gap-3">
-        {/* Show wallet button only if Echo is NOT signed in */}
-        <WalletConnectButton />
-        {/* Show Echo account only if wallet is NOT connected */}
-        {/* {!isConnected && <EchoAccount />} */}
+        <ConnectionSelector />
       </div>
     </header>
   );
