@@ -106,8 +106,27 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
         <X size={14} className="text-gray-600" />
       </button>
       {video.isLoading ? (
-        <div className="flex flex-col items-center justify-center h-full space-y-2 p-4">
-          <Skeleton className="h-16 w-16 rounded-lg" />
+        <div className="flex flex-col items-center justify-center h-full space-y-3 p-4">
+          {typeof video.progress === "number" ? (
+            <div className="w-full space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  {video.progress}%
+                </span>
+                <span className="text-xs text-gray-500">
+                  {video.progress < 100 ? "Generating..." : "Finalizing..."}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${video.progress}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <Skeleton className="h-16 w-16 rounded-lg" />
+          )}
           <LoadingTimer startTime={video.timestamp} />
           <div className="text-xs text-gray-600 text-center">
             Generating {video.durationSeconds}s video...

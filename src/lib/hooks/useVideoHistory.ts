@@ -1,8 +1,8 @@
-import type { GeneratedVideo } from '@/lib/types';
-import { videoHistoryStorage } from '@/lib/video-history';
-import { videoOperationsStorage } from '@/lib/video-operations';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { isGenerateVideosOperation } from './useVideoOperations';
+import type { GeneratedVideo } from "@/lib/types";
+import { videoHistoryStorage } from "@/lib/video-history";
+import { videoOperationsStorage } from "@/lib/video-operations";
+import { Video } from "openai/resources/videos.mjs";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useVideoHistory() {
   const [videoHistory, setVideoHistory] = useState<GeneratedVideo[]>([]);
@@ -32,34 +32,27 @@ export function useVideoHistory() {
     const savedOperations = videoOperationsStorage.getPending();
     if (savedOperations.length === 0) return;
 
-    const historyVideos: GeneratedVideo[] = savedOperations.map(operation => 
-      
-      isGenerateVideosOperation(operation.operation) ? {
-      id: operation.id,
-      prompt: operation.prompt,
-      model: operation.model,
-      durationSeconds: operation.durationSeconds,
-      timestamp: operation.timestamp,
-      isLoading: !operation.operation.done,
-      videoUrl: operation.videoUrl,
-      error: operation.error,
-      operationName: operation.operation.name,
-    } : {
-      id: operation.id,
-      prompt: operation.prompt,
-      model: operation.model,
-      durationSeconds: operation.durationSeconds,
-      timestamp: operation.timestamp,
-      isLoading: operation.operation.status === "queued" || operation.operation.status === "in_progress",
-      videoUrl: operation.videoUrl,
-      error: operation.error,
-      operationName: operation.operation.id,
+    const historyVideos: GeneratedVideo[] = savedOperations.map((operation) => {
+      // All operations are Sora Video objects now
+      const video = operation.operation as Video;
+      return {
+        id: operation.id,
+        prompt: operation.prompt,
+        model: operation.model,
+        durationSeconds: operation.durationSeconds,
+        timestamp: operation.timestamp,
+        isLoading: video.status === "queued" || video.status === "in_progress",
+        progress: video.progress,
+        videoUrl: operation.videoUrl,
+        error: operation.error,
+        operationName: video.id,
+      };
     });
 
-    setVideoHistory(prev => {
-      const existingIds = new Set(prev.map(v => v.id));
+    setVideoHistory((prev) => {
+      const existingIds = new Set(prev.map((v) => v.id));
       const merged = [
-        ...historyVideos.filter(v => !existingIds.has(v.id)),
+        ...historyVideos.filter((v) => !existingIds.has(v.id)),
         ...prev,
       ];
       return merged;
@@ -67,20 +60,20 @@ export function useVideoHistory() {
   }, [isInitialized]);
 
   const addVideo = useCallback((video: GeneratedVideo) => {
-    setVideoHistory(prev => [video, ...prev]);
+    setVideoHistory((prev) => [video, ...prev]);
   }, []);
 
   const updateVideo = useCallback(
     (id: string, updates: Partial<GeneratedVideo>) => {
-      setVideoHistory(prev =>
-        prev.map(v => (v.id === id ? { ...v, ...updates } : v))
+      setVideoHistory((prev) =>
+        prev.map((v) => (v.id === id ? { ...v, ...updates } : v)),
       );
     },
-    []
+    [],
   );
 
   const removeVideo = useCallback((id: string) => {
-    setVideoHistory(prev => prev.filter(v => v.id !== id));
+    setVideoHistory((prev) => prev.filter((v) => v.id !== id));
     videoHistoryStorage.remove(id);
     videoOperationsStorage.remove(id);
   }, []);

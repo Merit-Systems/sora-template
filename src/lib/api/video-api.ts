@@ -1,5 +1,6 @@
 import type { GenerateVideoRequest, VideoModelOption } from "@/lib/types";
 import { GenerateVideosOperation } from "@google/genai";
+import { Video } from "openai/resources/videos.mjs";
 import { WalletClient } from "viem";
 import { Signer } from "x402/types";
 import { createPaymentHeader } from "../402/createPaymentHeader";
@@ -86,36 +87,11 @@ export async function generateVideo(
   return response.json();
 }
 
-/**
- * Check the status of a video generation operation
- */
-export async function checkVideoStatus(
-  operation: GenerateVideosOperation,
-  model: VideoModelOption,
-  walletClient: WalletClient | undefined,
-): Promise<GenerateVideosOperation> {
-  const headers = createApiHeaders(walletClient);
-  const body = { operationName: operation.name, model };
-
-  const response = await fetch("/api/check-video-status", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
-  }
-
-  return response.json();
-}
-
 export async function checkSoraStatus(
   operation: string,
   model: VideoModelOption,
   walletClient: WalletClient | undefined,
-): Promise<GenerateVideosOperation> {
+): Promise<Video> {
   const headers = createApiHeaders(walletClient);
   const url = "/api/check-video-status";
   const body = { operationName: operation, model };

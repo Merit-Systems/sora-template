@@ -8,14 +8,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const operationData: string | undefined = body?.operationData;
     const operationName: string | undefined = body?.operationName;
-    
+
     if (!operationData && !operationName) {
       return Response.json(
         { error: "operationData or operationName is required" },
         { status: 400 },
       );
     }
-    
+
     // Always use Sora status check since we only support Sora models
     return checkSoraStatus(
       operationName || operationData!,
