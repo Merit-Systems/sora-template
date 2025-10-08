@@ -18,7 +18,7 @@ function createApiHeaders(
 // Helper function to handle 402 payment retry logic
 async function handlePaymentRetry(
   url: string,
-  body: any,
+  body: unknown,
   walletClient: WalletClient | undefined,
   initialResponse: Response,
 ): Promise<Response> {

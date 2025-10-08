@@ -93,7 +93,6 @@ export function validateSoraRequest(body: unknown): ValidationResult {
 // Helper functions for cleaner code
 async function validateAuthentication(
   useX402: boolean,
-  paymentHeader: string | null,
 ): Promise<{ token?: string | null; error?: Response }> {
   if (useX402) {
     // In x402 mode, we don't validate payment header here
@@ -158,7 +157,7 @@ export async function handleSoraGenerate(
   const paymentHeader = headers.get("x-payment");
 
   // Validate authentication
-  const authResult = await validateAuthentication(useX402, paymentHeader);
+  const authResult = await validateAuthentication(useX402);
   if (authResult.error) {
     return authResult.error;
   }
@@ -261,10 +260,7 @@ export async function checkSoraStatus(
   paymentHeader?: string,
 ): Promise<Response> {
   // Validate authentication
-  const authResult = await validateAuthentication(
-    useX402,
-    paymentHeader || null,
-  );
+  const authResult = await validateAuthentication(useX402);
   if (authResult.error) {
     return authResult.error;
   }

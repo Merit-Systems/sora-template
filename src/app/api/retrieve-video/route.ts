@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     } else {
       openaiHeaders["x-payment"] = "dummy";
     }
-  } catch (error) {
+  } catch {
     openaiHeaders["x-payment"] = "dummy";
   }
 
