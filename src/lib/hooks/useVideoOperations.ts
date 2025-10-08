@@ -56,7 +56,7 @@ export function useVideoOperations({
 
       const results = await Promise.allSettled(
         pendingOperations.map(async op => {
-          if (op.model === 'sora-2') {
+          if (op.model === 'sora-2' || op.model === 'sora-2-pro') {
             const operation = op.operation as Video;
             const result = await checkSoraStatus(operation.id, op.model, walletClient);
             return { operationId: op.id, result };
