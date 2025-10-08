@@ -84,6 +84,7 @@ export function useVideoOperations({
 
           onOperationComplete(operationId, {
             videoUrl,
+            fullVideoId: operation.id,
             isLoading: false,
             progress: 100,
             error: undefined,

@@ -44,6 +44,7 @@ export function useVideoHistory() {
         isLoading: video.status === "queued" || video.status === "in_progress",
         progress: video.progress,
         videoUrl: operation.videoUrl,
+        fullVideoId: video.id,
         error: operation.error,
         operationName: video.id,
       };

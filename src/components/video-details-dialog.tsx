@@ -33,13 +33,10 @@ export function VideoDetailsDialog({
   }, [video]);
 
   const handleCopyUrl = useCallback(async () => {
-    if (!video?.videoUrl) return;
+    if (!video?.id) return;
 
-    try {
-      await navigator.clipboard.writeText(video.videoUrl);
-    } catch (error) {
-      console.error('Failed to copy video URL:', error);
-    }
+    const shareUrl = `${window.location.origin}/videos/${video.fullVideoId || video.id}`;
+    await navigator.clipboard.writeText(shareUrl);
   }, [video]);
 
   if (!video) return null;

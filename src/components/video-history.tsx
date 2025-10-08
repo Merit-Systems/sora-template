@@ -68,10 +68,10 @@ const VideoHistoryItem = React.memo(function VideoHistoryItem({
   }, [video]);
 
   const handleCopy = useCallback(async () => {
-    if (!video.videoUrl) return;
+    if (!video.fullVideoId) return;
 
     try {
-      await navigator.clipboard.writeText(video.videoUrl);
+      await navigator.clipboard.writeText(`${window.location.origin}/videos/${video.fullVideoId || video.id}`);
     } catch (error) {
       console.error("Failed to copy video URL:", error);
     }

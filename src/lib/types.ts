@@ -80,6 +80,8 @@ export interface GeneratedVideo {
   isLoading?: boolean;
   /** Progress of video generation (0-100) */
   progress?: number;
+  /** Full video ID when completed (derived from SDK operation) */
+  fullVideoId?: string;
   /** Error message if generation failed */
   error?: string;
   /** Optional operation name for tracking */
@@ -147,6 +149,8 @@ export interface VideoOperation {
   timestamp: Date;
   /** Video URL when completed (derived from SDK operation) */
   videoUrl?: string;
+  /** Full video ID when completed (derived from SDK operation) */
+  fullVideoId?: string;
   /** Error message if failed (derived from SDK operation) */
   error?: string;
   /** When the signed URL expires (ISO string) */
