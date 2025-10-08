@@ -4,6 +4,7 @@
 
 import { getEchoToken } from "@/echo";
 import { ERROR_MESSAGES } from "@/lib/constants";
+import { padImageForVideo } from "@/lib/image-padding";
 import { config } from "dotenv";
 import OpenAI from "openai";
 import { VideoCreateParams } from "openai/resources/videos.mjs";
@@ -203,17 +204,35 @@ export async function handleSoraGenerate(
 
   // Add image reference if provided
   if (params.input_reference) {
-    // Handle both data URLs and plain base64
-    const base64Data = params.input_reference.startsWith("data:")
-      ? params.input_reference.split(",")[1]
-      : params.input_reference;
+    try {
+      // Handle both data URLs and plain base64
+      const base64Data = params.input_reference.startsWith("data:")
+        ? params.input_reference.split(",")[1]
+        : params.input_reference;
 
-    // Convert base64 to File object
-    const buffer = Buffer.from(base64Data, "base64");
-    const blob = new Blob([buffer], { type: "image/jpeg" });
-    const file = new File([blob], "reference.jpg", { type: "image/jpeg" });
+      // Pad image to match video output dimensions
+      const videoSize = params.size || "1280x720"; // default size if not specified
+      const paddedBase64 = await padImageForVideo(base64Data, videoSize);
 
-    createParams.input_reference = file;
+      // Convert padded base64 to File object
+      const buffer = Buffer.from(paddedBase64, "base64");
+      const blob = new Blob([buffer], { type: "image/png" }); // PNG to preserve transparency
+      const file = new File([blob], "reference.png", { type: "image/png" });
+
+      createParams.input_reference = file;
+    } catch (error) {
+      console.error("Error padding input image:", error);
+      // Fallback to original image without padding
+      const base64Data = params.input_reference.startsWith("data:")
+        ? params.input_reference.split(",")[1]
+        : params.input_reference;
+
+      const buffer = Buffer.from(base64Data, "base64");
+      const blob = new Blob([buffer], { type: "image/jpeg" });
+      const file = new File([blob], "reference.jpg", { type: "image/jpeg" });
+
+      createParams.input_reference = file;
+    }
   }
 
   try {

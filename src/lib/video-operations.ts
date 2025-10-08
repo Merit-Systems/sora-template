@@ -1,7 +1,7 @@
-import { isGenerateVideosOperation, isVideo } from './hooks/useVideoOperations';
-import type { VideoOperation } from './types';
+import { Video } from "openai/resources/videos.mjs";
+import type { VideoOperation } from "./types";
 
-const VIDEO_OPERATIONS_KEY = 'video-operations';
+const VIDEO_OPERATIONS_KEY = "video-operations";
 
 /**
  * localStorage utilities for persisting video operations
@@ -11,7 +11,7 @@ export const videoOperationsStorage = {
    * Get all stored video operations
    */
   getAll(): VideoOperation[] {
-    if (typeof window === 'undefined') return [];
+    if (typeof window === "undefined") return [];
 
     try {
       const stored = localStorage.getItem(VIDEO_OPERATIONS_KEY);
@@ -19,7 +19,7 @@ export const videoOperationsStorage = {
 
       const operations = JSON.parse(stored) as VideoOperation[];
       // Convert timestamp strings back to Date objects
-      return operations.map(op => ({
+      return operations.map((op) => ({
         ...op,
         timestamp: new Date(op.timestamp),
       }));
@@ -32,17 +32,17 @@ export const videoOperationsStorage = {
    * Store a video operation
    */
   store(operation: VideoOperation): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const existing = this.getAll();
       const updated = [
         operation,
-        ...existing.filter(op => op.id !== operation.id),
+        ...existing.filter((op) => op.id !== operation.id),
       ];
       localStorage.setItem(VIDEO_OPERATIONS_KEY, JSON.stringify(updated));
     } catch (error) {
-      console.error('Failed to store video operation:', error);
+      console.error("Failed to store video operation:", error);
     }
   },
 
@@ -50,16 +50,16 @@ export const videoOperationsStorage = {
    * Update an existing operation
    */
   update(operationId: string, updates: Partial<VideoOperation>): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const existing = this.getAll();
-      const updated = existing.map(op =>
-        op.id === operationId ? { ...op, ...updates } : op
+      const updated = existing.map((op) =>
+        op.id === operationId ? { ...op, ...updates } : op,
       );
       localStorage.setItem(VIDEO_OPERATIONS_KEY, JSON.stringify(updated));
     } catch (error) {
-      console.error('Failed to update video operation:', error);
+      console.error("Failed to update video operation:", error);
     }
   },
 
@@ -67,14 +67,14 @@ export const videoOperationsStorage = {
    * Remove a completed or failed operation
    */
   remove(operationId: string): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       const existing = this.getAll();
-      const filtered = existing.filter(op => op.id !== operationId);
+      const filtered = existing.filter((op) => op.id !== operationId);
       localStorage.setItem(VIDEO_OPERATIONS_KEY, JSON.stringify(filtered));
     } catch (error) {
-      console.error('Failed to remove video operation:', error);
+      console.error("Failed to remove video operation:", error);
     }
   },
 
@@ -83,16 +83,12 @@ export const videoOperationsStorage = {
    */
   getPending(): VideoOperation[] {
     const now = new Date();
-    return this.getAll().filter(op => {
+    return this.getAll().filter((op) => {
+      // All operations are Sora Video objects
+      const video = op.operation as Video;
+
       // Not done yet - needs polling
-      if (isGenerateVideosOperation(op.operation)) {  
-        if (op.operation.done) {
-          return false;
-        }
-      } else if (isVideo(op.operation)) {
-        if (op.operation.status === "completed") {
-          return false;
-        }
+      if (video.status === "queued" || video.status === "in_progress") {
         return true;
       }
 
@@ -111,12 +107,12 @@ export const videoOperationsStorage = {
    * Clear all stored operations (for cleanup)
    */
   clear(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       localStorage.removeItem(VIDEO_OPERATIONS_KEY);
     } catch (error) {
-      console.error('Failed to clear video operations:', error);
+      console.error("Failed to clear video operations:", error);
     }
   },
 };

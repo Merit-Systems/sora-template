@@ -78,6 +78,8 @@ export interface GeneratedVideo {
   timestamp: Date;
   /** Whether the video is still being generated */
   isLoading?: boolean;
+  /** Progress of video generation (0-100) */
+  progress?: number;
   /** Error message if generation failed */
   error?: string;
   /** Optional operation name for tracking */
