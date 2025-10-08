@@ -132,8 +132,6 @@ function echoFetch(fetch: typeof globalThis.fetch, paymentAuthHeader: string | n
     }
 
     delete headers['Authorization'];
-
-    console.log("headers: ", headers)
     return fetch(input, {
       ...init,
       headers,
@@ -320,6 +318,43 @@ export async function checkSoraStatus(
     console.error("Error retrieving video status:", error);
     return Response.json(
       { error: "Failed to retrieve video status" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function downloadContent(
+  videoId: string,
+  useX402: boolean,
+  paymentHeader?: string,
+): Promise<Response> {
+  // Validate authentication
+  const authResult = await validateAuthentication(useX402);
+  if (authResult.error) {
+    return authResult.error;
+  }
+
+  // Create OpenAI client
+  const openai = createOpenAIClient(
+    useX402,
+    paymentHeader || null,
+    authResult.token,
+  );
+
+  try {
+    const response = await openai.videos.downloadContent(videoId);
+    const content = await response.blob();
+
+    return new Response(content, {
+      headers: {
+        "Content-Type": "video/mp4",
+        "Content-Disposition": `attachment; filename="video-${videoId}.mp4"`,
+      },
+    });
+  } catch (error) {
+    console.error("Error downloading video content:", error);
+    return Response.json(
+      { error: "Failed to download video content" },
       { status: 500 },
     );
   }
