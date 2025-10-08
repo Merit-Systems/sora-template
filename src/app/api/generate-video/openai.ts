@@ -124,6 +124,25 @@ async function validateAuthentication(
   }
 }
 
+function echoFetch(fetch: any, paymentAuthHeader: string | null | undefined) {
+
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const headers: Record<string, any> = { ...init?.headers };
+    // Handle 402 payment
+    if (paymentAuthHeader) {
+      headers['x-payment'] = paymentAuthHeader;
+    }
+
+    delete headers['Authorization'];
+
+    console.log("headers: ", headers)
+    return fetch(input, {
+      ...init,
+      headers,
+    });
+  }
+}
+
 function createOpenAIClient(
   useX402: boolean,
   paymentHeader: string | null,
@@ -134,15 +153,20 @@ function createOpenAIClient(
 
   if (useX402) {
     openaiHeaders["x-payment"] = paymentHeader || "";
+    return new OpenAI({
+      defaultHeaders: openaiHeaders,
+      baseURL: BASE_URL,
+      apiKey: token || "ignore",
+      fetch: echoFetch(fetch, paymentHeader),
+    });
   } else {
     apiKey = token || "ignore";
+    return new OpenAI({
+      defaultHeaders: openaiHeaders,
+      baseURL: BASE_URL,
+      apiKey,
+    });
   }
-
-  return new OpenAI({
-    defaultHeaders: openaiHeaders,
-    baseURL: BASE_URL,
-    apiKey,
-  });
 }
 
 /**
